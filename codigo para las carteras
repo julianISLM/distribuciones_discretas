@@ -26,20 +26,20 @@ library(plyr)
 
 
 # subir base de datos -----------------------------------------------------
-carteras_autos_7 <- read_excel("carteras_autos.xlsx") #se suben las tablas con las carteras
-carteras_autos_15 <- read_excel("carteras_autos.xlsx",
+carteras_autos_7 <- read_excel("C:/Users/julio/OneDrive/Escritorio/Especialización/teoria basica de la probabilidad/carteras_autos.xlsx")
+carteras_autos_15 <- read_excel("C:/Users/julio/OneDrive/Escritorio/Especialización/teoria basica de la probabilidad/carteras_autos.xlsx",
                                 sheet = 2)
 
 
-carteras_autos_7 <- as.data.frame(carteras_autos_7[1:8,]) #se seleccionan las filas que se necesitan para hallar los parametros
+carteras_autos_7 <- as.data.frame(carteras_autos_7[1:8,])
 carteras_autos_15 <- as.data.frame(carteras_autos_15[1:9,]) 
 
-carteras_autos_7$`(k) Siniestros` <- as.numeric(carteras_autos_7$`(k) Siniestros`) #se hacen ajustes para poder hacer las multiplicaciones
+carteras_autos_7$`(k) Siniestros` <- as.numeric(carteras_autos_7$`(k) Siniestros`)
 carteras_autos_15$`(k) Siniestros` <- as.numeric(carteras_autos_15$`(k) Siniestros`)
 
 
 # multiplicacion ----------------------------------------------------------
-df_mean <- carteras_autos_7 %>% select(starts_with("freq_"), "(k) Siniestros") #se seleccionan las variables
+df_mean <- carteras_autos_7 %>% select(starts_with("freq_"), "(k) Siniestros") 
 
 
 
@@ -48,17 +48,19 @@ my_df <- as.data.frame(matrix(0,dim(df_mean)[1],dim(df_mean)[2]))
 
 for (i in 1:length(df_mean)) {
   my_df[,i] <- df_mean[,i]*df_mean[8] 
-} #se multiplica por su k respectivo
+}
 
 
 sum_my_df <- as.data.frame(t(colSums(my_df,na.rm = T)))
 
-mean_carteras <- sum_my_df %>% select(-c("V8")) #se saca la suma una vez se realizo las multiplicacion
+mean_carteras <- sum_my_df %>% select(-c("V8"))
+
 
 # variance ----------------------------------------------------------------
 
+
 df_var <- carteras_autos_7 %>% select(starts_with("freq_"), "(k) Siniestros") %>% mutate("x^2" = `(k) Siniestros`^2) %>%
-  select(starts_with("freq_"),"x^2") #se eleva el k al cuadrado para hacer la multiplicacion para hallar la varianza
+  select(starts_with("freq_"),"x^2")
 
 
 
@@ -72,18 +74,21 @@ for (i in 1:length(df_var)) {
 
 sum_my_df <- as.data.frame(t(colSums(my_df,na.rm = T)))
 
-var_carteras <- sum_my_df %>% select(-c("x^2")) #se halla la varianza
+var_carteras <- sum_my_df %>% select(-c("x^2"))
+
+my_df <- full_join(mean_carteras,var_carteras)
+my_df <- as.data.frame(t(my_df)) %>% plyr::rename(c("V1" = "mean", "V2" = "segundo momento"))
+
+my_df <- my_df %>% mutate(variance = `segundo momento`-(mean)^2)
 
 # indice de dispersion ----------------------------------------------------
 
-my_df <- full_join(mean_carteras,var_carteras) #se unen la media y la varianza para determinar el indice de dispersion
-my_df <- as.data.frame(t(my_df)) %>% plyr::rename(c("V1" = "mean", "V2" = "variance"))
 my_df <- my_df %>% mutate(ID = variance/mean)
 
 my_ID_7 <- my_df
 
 
-#aqui para bajo se realiza lo mismo con las ultimas ocho carteras
+
 # multiplicacion ----------------------------------------------------------
 df_mean <- carteras_autos_15 %>% select(starts_with("freq_"), "(k) Siniestros") 
 
@@ -100,6 +105,7 @@ for (i in 1:length(df_mean)) {
 sum_my_df <- as.data.frame(t(colSums(my_df,na.rm = T)))
 
 mean_carteras <- sum_my_df %>% select(-c("V9"))
+
 
 
 # variance ----------------------------------------------------------------
@@ -122,15 +128,16 @@ sum_my_df <- as.data.frame(t(colSums(my_df,na.rm = T)))
 
 var_carteras <- sum_my_df %>% select(-c("x^2"))
 
+my_df <- full_join(mean_carteras,var_carteras)
+my_df <- as.data.frame(t(my_df)) %>% plyr::rename(c("V1" = "mean", "V2" = "segundo momento"))
 
+my_df <- my_df %>% mutate(variance = `segundo momento`-(mean)^2)
 
 # indice de dispersion ----------------------------------------------------
 
-my_df <- full_join(mean_carteras,var_carteras)
-my_df <- as.data.frame(t(my_df)) %>% plyr::rename(c("V1" = "mean", "V2" = "variance"))
 my_df <- my_df %>% mutate(ID = variance/mean)
 
 my_ID_15 <- my_df
 
-#se unen la media y varianza para las 15 carteras
 my_ID <- full_join(my_ID_7,my_ID_15)
+
